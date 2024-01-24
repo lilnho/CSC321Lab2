@@ -2,26 +2,60 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import os
 
-BLOCKSIZE = 1024
+BLOCKSIZE = 16
+
+def pkcs7(file_data):
+    overflow_size = (len(file_data) % BLOCKSIZE)
+    pad_size = 16 - overflow_size
+    
+    pad = bytes([pad_size] * pad_size)
+    return file_data + pad
+    
+def ecb(file_data):
+    aes_key = get_random_bytes(16)
+
+    data = pkcs7(file_data)
+    numBlocks = len(file_data) // BLOCKSIZE
+    
+    encrypted = b''
+    for block in range(numBlocks):
+        block_data = data[block * 16: (block + 1) * 16]
+        
+        #xor = bitwise_xor_bytes(block_data, aes_key)
+        for x,y in zip(aes_key, block_data):
+            xor = bytes(x^y for x,y in zip(aes_key, block_data))
+        encrypted += xor
+    
+    return encrypted
 
 def main(file_name):
-    temp = 0
-    aes_key = get_random_bytes(16)
     IV = get_random_bytes(16)
-    
-    #ECB
-        file_name.read(BLOCKSIZE)
 
     try:
         file_size = os.path.getsize(file_name)
         overflow_size = file_size % BLOCKSIZE
     except FileNotFoundError:
-        print(f"Error File '{filename}' not found.")
+        print(f"Error File '{file_name}' not found.")
 
     # PKCS#7 Padding
     if overflow_size != 0:
         try:
-            with open(file_name, 'rb') as fi
+            with open(file_name, 'rb') as file:
+                #BMP header = 54 bytes
+                bmp_hdr = file.read(54)
+                file_data = file.read()
+        except FileNotFoundError:
+            print(f"Error File '{file_name}' not found.")
+    
+    
+    encrypted = ecb(file_data)
+    
+    #preserve and reappend BMP header as plaintext
+    encrypted_bmp = bmp_hdr + encrypted
+    
+    with open("encrypted.bmp", 'wb') as ecb_file:
+        ecb_file.write(encrypted_bmp)
+    
 
 if __name__ == "__main__":
-    main()
+    main("cp-logo.bmp")
