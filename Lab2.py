@@ -1,7 +1,9 @@
+import Crypto
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import os
 
+Crypto.Cipher.AES.MODE_ECB = 1
 BLOCKSIZE = 16
 
 def pkcs7(file_data):
@@ -15,16 +17,32 @@ def ecb(file_data):
     aes_key = get_random_bytes(16)
 
     data = pkcs7(file_data)
+#   numBlocks = len(file_data) // BLOCKSIZE
+    
+    
+    cipher = AES.new(aes_key,AES.MODE_ECB)
+    ciphertext = cipher.encrypt(data)
+
+    return ciphertext
+
+def cbc(file_data):
+    aes_key = get_random_bytes(16)
+    iv = get_random_bytes(16)
+
+    data = pkcs7(file_data)
     numBlocks = len(file_data) // BLOCKSIZE
     
     encrypted = b''
+    cipher = AES.new(aes_key,AES.MODE_ECB)
     for block in range(numBlocks):
         block_data = data[block * 16: (block + 1) * 16]
-        
+
         #xor = bitwise_xor_bytes(block_data, aes_key)
-        for x,y in zip(aes_key, block_data):
-            xor = bytes(x^y for x,y in zip(aes_key, block_data))
-        encrypted += xor
+        #for x,y in zip(iv, block_data):
+        xor = bytes(x^y for x,y in zip(iv, block_data))
+        ciphertext = cipher.encrypt(xor)
+        iv = cipher
+        encrypted += ciphertext
     
     return encrypted
 
