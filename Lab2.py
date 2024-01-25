@@ -36,12 +36,11 @@ def cbc(file_data):
     cipher = AES.new(aes_key,AES.MODE_ECB)
     for block in range(numBlocks):
         block_data = data[block * 16: (block + 1) * 16]
-
         #xor = bitwise_xor_bytes(block_data, aes_key)
         #for x,y in zip(iv, block_data):
         xor = bytes(x^y for x,y in zip(iv, block_data))
         ciphertext = cipher.encrypt(xor)
-        iv = cipher
+        iv = ciphertext
         encrypted += ciphertext
     
     return encrypted
@@ -67,12 +66,17 @@ def main(file_name):
     
     
     encrypted = ecb(file_data)
+    enc2 = cbc(file_data)
     
     #preserve and reappend BMP header as plaintext
     encrypted_bmp = bmp_hdr + encrypted
+    enc_bmp = bmp_hdr + enc2
     
     with open("encrypted.bmp", 'wb') as ecb_file:
         ecb_file.write(encrypted_bmp)
+
+    with open("enc2.bmp", 'wb') as ecb_file:
+        ecb_file.write(enc_bmp)
     
 
 if __name__ == "__main__":
