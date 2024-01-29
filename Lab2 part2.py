@@ -24,12 +24,12 @@ def ecb(file_data):
 
     return ciphertext
 
-def cbc(file_data, iv, aes_key):
+def cbc(file_data, iv, cipher):
     data = pkcs7(file_data)
     numBlocks = len(file_data) // BLOCKSIZE
     
     encrypted = b''
-    cipher = AES.new(aes_key,AES.MODE_ECB)
+    
     for block in range(numBlocks):
         block_data = data[block * 16: (block + 1) * 16]
         xor = bytes(x^y for x,y in zip(iv, block_data))
@@ -39,16 +39,27 @@ def cbc(file_data, iv, aes_key):
     
     return encrypted
 
-def cbc_decrypt(arb_string, cipher, aes_key):
-    numBlocks = len(arb_string) // BLOCKSIZE
-    for block in range(numBlocks,0,-1):
-        block_data = arb_string[(block -1) *16: block *16]
-        cur_key = cipher.decrypt(aes_key)
+def cbc_decrypt(ciphertext, iv, cipher):
+    numBlocks = len(ciphertext) // BLOCKSIZE
     decrypted = b''
-    
-    
-    
-    
+
+    for block in range(numBlocks):
+        block_data = ciphertext[block * 16: (block + 1) * 16]
+        decrypt_block = cipher.decrypt(block_data)
+        xor = bytes(x^y for x,y in zip(iv, decrypt_block))
+        decrypted += xor
+        iv = block_data
+
+    return decrypted
+
+    # last_block = ciphertext[(numBlocks - 1) *16: numBlocks * 16]
+    # last_key = last_block.decrypt(aes_key)
+    # for block in range(numBlocks - 1,0,-1):
+    #     iv = ciphertext[(block - 1) *16: block *16]
+    #     xor = bytes(x^y for x,y in zip(iv,last_key))
+    #     last_block = iv
+    #     decrypted += xor
+    #     last_key = last_block.decrypt(aes_key)
 
 def submit(arb_string, iv, aes_key):
     new_string = "userid=456;userdata=" + arb_string + ";session-id=31337"
@@ -67,8 +78,10 @@ def main(file_name):
     IV = get_random_bytes(16)
     aes_key = get_random_bytes(16)
 
+    cipher = AES.new(aes_key,AES.MODE_ECB)
+
     msg = input("Enter your message")    
-    encrypted = submit(msg ,IV,aes_key)
+    encrypted = submit(msg ,IV,cipher)
 
     
 
