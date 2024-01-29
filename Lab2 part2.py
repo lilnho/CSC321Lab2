@@ -17,7 +17,6 @@ def ecb(file_data):
     aes_key = get_random_bytes(16)
 
     data = pkcs7(file_data)
-#   numBlocks = len(file_data) // BLOCKSIZE
     
     
     cipher = AES.new(aes_key,AES.MODE_ECB)
@@ -25,10 +24,7 @@ def ecb(file_data):
 
     return ciphertext
 
-def cbc(file_data):
-    aes_key = get_random_bytes(16)
-    iv = get_random_bytes(16)
-
+def cbc(file_data, iv, aes_key):
     data = pkcs7(file_data)
     numBlocks = len(file_data) // BLOCKSIZE
     
@@ -36,8 +32,6 @@ def cbc(file_data):
     cipher = AES.new(aes_key,AES.MODE_ECB)
     for block in range(numBlocks):
         block_data = data[block * 16: (block + 1) * 16]
-        #xor = bitwise_xor_bytes(block_data, aes_key)
-        #for x,y in zip(iv, block_data):
         xor = bytes(x^y for x,y in zip(iv, block_data))
         ciphertext = cipher.encrypt(xor)
         iv = ciphertext
@@ -45,38 +39,37 @@ def cbc(file_data):
     
     return encrypted
 
+def cbc_decrypt(arb_string, cipher, aes_key):
+    numBlocks = len(arb_string) // BLOCKSIZE
+    for block in range(numBlocks,0,-1):
+        block_data = arb_string[(block -1) *16: block *16]
+        cur_key = cipher.decrypt(aes_key)
+    decrypted = b''
+    
+    
+    
+    
+
+def submit(arb_string, iv, aes_key):
+    new_string = "userid=456;userdata=" + arb_string + ";session-id=31337"
+    new_string = new_string.replace(";", "%3B")
+    new_string = new_string.replace("=", "%3D")
+    new_string = pkcs7(new_string)
+    return cbc(new_string, iv, aes_key)
+    
+
+def verify(arb_string, cipher, aes_key):
+    newstring = cbc_decrypt(arb_string, cipher, aes_key); 
+    
+    return ";admin=true;" in newstring
+
 def main(file_name):
     IV = get_random_bytes(16)
+    aes_key = get_random_bytes(16)
 
-    try:
-        file_size = os.path.getsize(file_name)
-        overflow_size = file_size % BLOCKSIZE
-    except FileNotFoundError:
-        print(f"Error File '{file_name}' not found.")
+    msg = input("Enter your message")    
+    encrypted = submit(msg ,IV,aes_key)
 
-    # PKCS#7 Padding
-    if overflow_size != 0:
-        try:
-            with open(file_name, 'rb') as file:
-                #BMP header = 54 bytes
-                bmp_hdr = file.read(54)
-                file_data = file.read()
-        except FileNotFoundError:
-            print(f"Error File '{file_name}' not found.")
-    
-    
-    encrypted = ecb(file_data)
-    enc2 = cbc(file_data)
-    
-    #preserve and reappend BMP header as plaintext
-    encrypted_bmp = bmp_hdr + encrypted
-    enc_bmp = bmp_hdr + enc2
-    
-    with open("encrypted.bmp", 'wb') as ecb_file:
-        ecb_file.write(encrypted_bmp)
-
-    with open("enc2.bmp", 'wb') as ecb_file:
-        ecb_file.write(enc_bmp)
     
 
 if __name__ == "__main__":
