@@ -65,25 +65,31 @@ def submit(arb_string, iv, aes_key):
     new_string = "userid=456;userdata=" + arb_string + ";session-id=31337"
     new_string = new_string.replace(";", "%3B")
     new_string = new_string.replace("=", "%3D")
-    new_string = pkcs7(new_string)
+    new_string = bytes(new_string, 'utf-8')
     return cbc(new_string, iv, aes_key)
     
 
-def verify(arb_string, cipher, aes_key):
-    newstring = cbc_decrypt(arb_string, cipher, aes_key); 
-    
-    return ";admin=true;" in newstring
+def verify(arb_string, iv, cipher):
+    newstring = cbc_decrypt(arb_string, iv, cipher)
+    deco = newstring.decode("utf-8")
+    deco = deco.replace("%3B",";")
+    deco = deco.replace("%3D","=")
+    print(deco)
+    return ";admin=true;" in deco
 
-def main(file_name):
-    IV = get_random_bytes(16)
+def main():
+    iv = get_random_bytes(16)
     aes_key = get_random_bytes(16)
 
     cipher = AES.new(aes_key,AES.MODE_ECB)
 
-    msg = input("Enter your message")    
-    encrypted = submit(msg ,IV,cipher)
+    msg = input("Enter your message: ")  
+    encrypted = submit(msg ,iv,cipher)
+    decrypted = verify(encrypted,iv, cipher)
+    
+    print(decrypted)
 
     
 
 if __name__ == "__main__":
-    main("cp-logo.bmp")
+    main()
