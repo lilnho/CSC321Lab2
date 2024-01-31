@@ -34,7 +34,7 @@ def cbc(file_data):
     
     encrypted = b''
     cipher = AES.new(aes_key,AES.MODE_ECB)
-    for block in range(numBlocks):
+    for block in range(numBlocks +1):
         block_data = data[block * 16: (block + 1) * 16]
         #xor = bitwise_xor_bytes(block_data, aes_key)
         #for x,y in zip(iv, block_data):

@@ -27,10 +27,10 @@ def ecb(file_data):
 def cbc(file_data, iv, cipher):
     data = pkcs7(file_data)
     numBlocks = len(file_data) // BLOCKSIZE
-    
+
     encrypted = b''
     
-    for block in range(numBlocks):
+    for block in range(numBlocks+1):
         block_data = data[block * 16: (block + 1) * 16]
         xor = bytes(x^y for x,y in zip(iv, block_data))
         ciphertext = cipher.encrypt(xor)
@@ -43,7 +43,7 @@ def cbc_decrypt(ciphertext, iv, cipher):
     numBlocks = len(ciphertext) // BLOCKSIZE
     decrypted = b''
 
-    for block in range(numBlocks):
+    for block in range(numBlocks+1):
         block_data = ciphertext[block * 16: (block + 1) * 16]
         decrypt_block = cipher.decrypt(block_data)
         xor = bytes(x^y for x,y in zip(iv, decrypt_block))
