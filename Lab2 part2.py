@@ -70,12 +70,19 @@ def submit(arb_string, iv, aes_key):
     
 
 def verify(arb_string, iv, cipher):
-    newstring = cbc_decrypt(arb_string, iv, cipher)
-    deco = newstring.decode("utf-8")
-    deco = deco.replace("%3B",";")
-    deco = deco.replace("%3D","=")
+    newstring = bytes(cbc_decrypt(arb_string, iv, cipher))
+    print(newstring)
+    deco = newstring.decode("iso-8859-1")
     print(deco)
+    
     return ";admin=true;" in deco
+
+def modify(ciphertext):
+    blockone = ciphertext[0:16]
+    xor =bytes(x^y for x,y in zip(blockone, blockone))
+    #emp = bytes(x^y for x,y in zip(xor, bytes(';admin=true;','utf-8'))) 
+    #res = ciphertext.replace(ciphertext[0:16], pkcs7(temp)) 
+    return ciphertext 
 
 def main():
     iv = get_random_bytes(16)
@@ -85,7 +92,8 @@ def main():
 
     msg = input("Enter your message: ")  
     encrypted = submit(msg ,iv,cipher)
-    decrypted = verify(encrypted,iv, cipher)
+    mod = modify(encrypted)
+    decrypted = verify(mod,iv, cipher)
     
     print(decrypted)
 
