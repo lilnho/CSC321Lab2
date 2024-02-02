@@ -52,15 +52,6 @@ def cbc_decrypt(ciphertext, iv, cipher):
 
     return decrypted
 
-    # last_block = ciphertext[(numBlocks - 1) *16: numBlocks * 16]
-    # last_key = last_block.decrypt(aes_key)
-    # for block in range(numBlocks - 1,0,-1):
-    #     iv = ciphertext[(block - 1) *16: block *16]
-    #     xor = bytes(x^y for x,y in zip(iv,last_key))
-    #     last_block = iv
-    #     decrypted += xor
-    #     last_key = last_block.decrypt(aes_key)
-
 def submit(arb_string, iv, aes_key):
     new_string = "userid=456;userdata=" + arb_string + ";session-id=31337"
     new_string = new_string.replace(";", "%3B")
@@ -71,18 +62,18 @@ def submit(arb_string, iv, aes_key):
 
 def verify(arb_string, iv, cipher):
     newstring = bytes(cbc_decrypt(arb_string, iv, cipher))
-    print(newstring)
-    deco = newstring.decode("iso-8859-1")
+    deco = newstring.decode('iso-8859-1')
     print(deco)
     
     return ";admin=true;" in deco
 
 def modify(ciphertext):
-    blockone = ciphertext[0:16]
-    xor =bytes(x^y for x,y in zip(blockone, blockone))
-    #emp = bytes(x^y for x,y in zip(xor, bytes(';admin=true;','utf-8'))) 
-    #res = ciphertext.replace(ciphertext[0:16], pkcs7(temp)) 
-    return ciphertext 
+    temp = bytearray(ciphertext)
+    blocktwo = temp[16:32]
+    temp[0:16] = temp[16:32]
+    xor =bytes(x^y for x,y in zip(blocktwo, pkcs7(bytes(';admin=true;', 'utf-8'))))
+    temp[16:32] = xor
+    return temp 
 
 def main():
     iv = get_random_bytes(16)
