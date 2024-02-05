@@ -68,12 +68,14 @@ def verify(arb_string, iv, cipher):
     return ";admin=true;" in deco
 
 def modify(ciphertext):
-    temp = bytearray(ciphertext)
-    blocktwo = temp[16:32]
-    temp[0:16] = temp[16:32]
-    xor =bytes(x^y for x,y in zip(blocktwo, pkcs7(bytes(';admin=true;', 'utf-8'))))
-    temp[16:32] = xor
-    return temp 
+    ciph = bytearray(ciphertext)
+    blockone = ciph[0:16]
+    p2 = pkcs7(bytes('serdata%3Dmsg%3B', 'utf-8'))
+    payload =  pkcs7(bytes(';admin=true;', 'utf-8'))
+    c1 = bytes(x^y for x,y in zip(blockone,p2))
+    xor =bytes(x^y for x,y in zip(c1,payload))
+    ciph[0:16] = xor
+    return ciph 
 
 def main():
     iv = get_random_bytes(16)
