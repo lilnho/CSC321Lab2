@@ -27,10 +27,10 @@ def ecb(file_data):
 def cbc(file_data, iv, cipher):
     data = pkcs7(file_data)
     numBlocks = len(file_data) // BLOCKSIZE
-    
+
     encrypted = b''
     
-    for block in range(numBlocks):
+    for block in range(numBlocks+1):
         block_data = data[block * 16: (block + 1) * 16]
         xor = bytes(x^y for x,y in zip(iv, block_data))
         ciphertext = cipher.encrypt(xor)
@@ -43,7 +43,7 @@ def cbc_decrypt(ciphertext, iv, cipher):
     numBlocks = len(ciphertext) // BLOCKSIZE
     decrypted = b''
 
-    for block in range(numBlocks):
+    for block in range(numBlocks+1):
         block_data = ciphertext[block * 16: (block + 1) * 16]
         decrypt_block = cipher.decrypt(block_data)
         xor = bytes(x^y for x,y in zip(iv, decrypt_block))
@@ -51,15 +51,6 @@ def cbc_decrypt(ciphertext, iv, cipher):
         iv = block_data
 
     return decrypted
-
-    # last_block = ciphertext[(numBlocks - 1) *16: numBlocks * 16]
-    # last_key = last_block.decrypt(aes_key)
-    # for block in range(numBlocks - 1,0,-1):
-    #     iv = ciphertext[(block - 1) *16: block *16]
-    #     xor = bytes(x^y for x,y in zip(iv,last_key))
-    #     last_block = iv
-    #     decrypted += xor
-    #     last_key = last_block.decrypt(aes_key)
 
 def submit(arb_string, iv, aes_key):
     new_string = "userid=456;userdata=" + arb_string + ";session-id=31337"
@@ -70,23 +61,21 @@ def submit(arb_string, iv, aes_key):
     
 
 def verify(arb_string, iv, cipher):
-    newstring = cbc_decrypt(arb_string, iv, cipher)
-    deco = newstring.decode("utf-8")
-    deco = deco.replace("%3B",";")
-    deco = deco.replace("%3D","=")
+    newstring = bytes(cbc_decrypt(arb_string, iv, cipher))
+    deco = newstring.decode('iso-8859-1')
     print(deco)
+    
     return ";admin=true;" in deco
 
-def hack(ciphertext):
-    new_cipher = b''
-    admin = ";admin=true;"
-    for i in ciphertext:
-        ciphertext = ord(i)^ord(i)
-    
-    for i, j in zip(admin, new_cipher):
-        new_cipher = ord(i) ^ j
-    
-    
+def modify(ciphertext):
+    ciph = bytearray(ciphertext)
+    blockone = ciph[0:16]
+    p2 = pkcs7(bytes('serdata%3Dmsg%3B', 'utf-8'))
+    payload =  pkcs7(bytes(';admin=true;', 'utf-8'))
+    c1 = bytes(x^y for x,y in zip(blockone,p2))
+    xor =bytes(x^y for x,y in zip(c1,payload))
+    ciph[0:16] = xor
+    return ciph 
 
 def main():
     iv = get_random_bytes(16)
@@ -96,7 +85,8 @@ def main():
 
     msg = input("Enter your message: ")  
     encrypted = submit(msg ,iv,cipher)
-    decrypted = verify(encrypted,iv, cipher)
+    mod = modify(encrypted)
+    decrypted = verify(mod,iv, cipher)
     
     print(decrypted)
 
