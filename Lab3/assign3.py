@@ -10,16 +10,19 @@ def pad(s):
 def diffie_ver1(p, g):
     # Alice
     a = random.randint(0, p)
-    A = (g^a)%p
+    #A = (g^a)%p
+    A = pow(g, a, p)
     # send A
 
     # Bob
     b = random.randint(0, p)
-    B = (g^b)%p
+    #B = (g^b)%p
+    B = pow(g, b, p)
     # send B
 
     # Alice
-    sA = (pow(B,a))%p
+    #sA = (pow(B,a))%p
+    sA = pow(B, a, p)
     k1 = SHA256.new()
     sA_BL = sA.to_bytes(2, byteorder='big')
     k1.update(sA_BL)
@@ -34,7 +37,8 @@ def diffie_ver1(p, g):
     print(cA)
     print("key 1", k1.digest())
     # Bob
-    sB = pow(A, b)%p
+    #sB = pow(A, b)%p
+    sB = pow(A, b, p)
     k2 = SHA256.new()
     sB_BL = sB.to_bytes(2, byteorder='big')
     k2.update(sB_BL)
