@@ -1,7 +1,11 @@
 import Crypto
 import random
+import hashlib
 from Crypto.Hash import SHA256
 from Crypto.Cipher import AES
+
+def pad(s):
+    return s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) % AES.block_size)
 
 def diffie_ver1(p, g):
     # Alice
@@ -15,26 +19,33 @@ def diffie_ver1(p, g):
     # send B
 
     # Alice
-    sA = (B^a)%p
+    sA = (pow(B,a))%p
     k1 = SHA256.new()
-    k1.update(str(sA))
+    sA_BL = sA.to_bytes(2, byteorder='big')
+    k1.update(sA_BL)
+    # sA_bytes = str(sA).encode('utf-8')
+    # k1 = hashlib.sha256(sA_bytes).hexdigest()[:16]
     m0 = "Hi Bob!"
-    cipher = AES.new(k1, AES.MODE_CBC)
-    cA = cipher.encrypt(m0)
+    m0 = pad(m0)
+    cipher = AES.new(k1.digest()[:16], AES.MODE_CBC)
+    cA = cipher.encrypt(m0.encode('utf-8'))
 
     # send cA
     print(cA)
-
+    print("key 1", k1.digest())
     # Bob
-    sB = (A^b)%p
+    sB = pow(A, b)%p
     k2 = SHA256.new()
-    k2.update(str(sB))
+    sB_BL = sB.to_bytes(2, byteorder='big')
+    k2.update(sB_BL)
     m1 = "Hi Alice"
-    cipher2 = AES.new(k2, AES.MODE_CBC)
-    cB = cipher2.encrypt(m1)
+    m1 = pad(m1)
+    cipher2 = AES.new(k2.digest()[:16], AES.MODE_CBC)
+    cB = cipher2.encrypt(m1.encode('utf-8'))
 
     # send cB
     print(cB)
+    print("key 2", k2.digest())
 
 # def diffie_ver2(p, q):
 
