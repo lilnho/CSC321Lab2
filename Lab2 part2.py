@@ -77,6 +77,17 @@ def verify(arb_string, iv, cipher):
     print(deco)
     return ";admin=true;" in deco
 
+def hack(ciphertext):
+    new_cipher = b''
+    admin = ";admin=true;"
+    for i in ciphertext:
+        ciphertext = ord(i)^ord(i)
+    
+    for i, j in zip(admin, new_cipher):
+        new_cipher = ord(i) ^ j
+    
+    
+
 def main():
     iv = get_random_bytes(16)
     aes_key = get_random_bytes(16)
