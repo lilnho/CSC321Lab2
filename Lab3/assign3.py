@@ -1,10 +1,11 @@
 import Crypto
 import random
-import hashlib
 from Crypto.Hash import SHA256
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import unpad
+from Crypto.Util.number import getPrime
+from Crypto.Util.number import bytes_to_long, long_to_bytes
 
 def pad(s):
     return s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) % AES.block_size)
@@ -209,6 +210,73 @@ def diffie_attack2(p, g):
     print(alice_message)
     print(bob_message)
     
+def rsa_encrypt(message):
+    m = int(message.encode('utf-8').hex(), 16)
+    p = getPrime(2048)
+    q = getPrime(2048)
+    n = p*q
+    phi = (p-1)*(q-1) # least common multiple of p-1 and q-1
+    e = 65537
+    c = pow(m, e, n)
+    return c, n, phi
+
+
+# Global Variables
+x, y = 0, 1
+ 
+def gcd_extended(a, b):
+    global x, y
+
+    if (a == 0):
+        x = 0
+        y = 1
+        return b
+ 
+    gcd = gcd_extended(b % a, a)
+    x1 = x
+    y1 = y
+ 
+    x = y1 - (b // a) * x1
+    y = x1
+ 
+    return gcd
+ 
+ 
+def mod_inverse(e, phi):
+ 
+    g = gcd_extended(e, phi)
+    if (g != 1):
+        raise ValueError("DNE")
+ 
+    else:
+        res = (x % phi + phi) % phi
+        return res
+
+
+def rsa_decrypt(phi, c, n):
+    e = 65537
+    gcd = mod_inverse(e, phi)
+    d = gcd
+    #d = pow(e, -1, phi)
+
+    m = pow(int(c), int(d), int(n))
+    hex_s = hex(m)[2:]
+    message = bytes.fromhex(hex_s).decode('utf-8')
+    return message
+
+# def rsa_attack(s, n, e, phi):
+#     # uses e, n from alice and s from bob
+#     c = pow(s, e, n)
+#     # mallory modifies c
+#     c_prime = (5 * c) % n
+#     # alice decrypts the modified c
+#     s = rsa_decrypt(phi, c_prime, n)
+#     key = SHA256.new(long_to_bytes(s)).digest()
+
+#     m = "Hi Bob!"
+#     cipher = AES.new(key, AES.MODE_CBC)
+#     c_zero = cipher.encrypt(m.encode('utf-8'))
+#     return c_zero
 
 def main():
     p = "B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C6"
@@ -226,6 +294,18 @@ def main():
 
     diffie_attack1(p, g)
     diffie_attack2(p, g)
+    c, n, phi = rsa_encrypt("hello")
+    m = rsa_decrypt(phi, c, n)
+
+    c, n, phi = rsa_encrypt("hi my name is keila")
+    m = rsa_decrypt(phi, c, n)
+
+
+    p = getPrime(2048)
+    q = getPrime(2048)
+    n = p*q
+    phi = (p-1)*(q-1)
+    # c_zero = rsa_attack(5, n, 3, phi)
 
 if __name__ == "__main__":
     main()
