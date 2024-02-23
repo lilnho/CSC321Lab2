@@ -4,13 +4,15 @@ from Crypto.Hash import SHA256
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import unpad
+from Crypto.Util.Padding import pad
 from Crypto.Util.number import getPrime
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 
-def pad(s):
+#TASK I
+def pad_me(s):
     return s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) % AES.block_size)
 
-def diffie_ver1(p, g):
+def diffie(p, g):
     # Alice
     if (isinstance(p, str)):
         p = int(p, 16)
@@ -38,13 +40,12 @@ def diffie_ver1(p, g):
     # sA_bytes = str(sA).encode('utf-8')
     # k1 = hashlib.sha256(sA_bytes).hexdigest()[:16]
     m0 = "Hi Bob!"
-    m0 = pad(m0)
+    m0 = pad_me(m0)
     cipher = AES.new(k1.digest()[:16], AES.MODE_CBC)
     cA = cipher.encrypt(m0.encode('utf-8'))
 
     # send cA
-    print(cA)
-    print("key 1", k1.digest())
+
     # Bob
     #sB = pow(A, b)%p
     sB = pow(A, b, p)
@@ -52,13 +53,13 @@ def diffie_ver1(p, g):
     sB_BL = sB.to_bytes((sB.bit_length() + 7) // 8, byteorder='big')
     k2.update(sB_BL)
     m1 = "Hi Alice"
-    m1 = pad(m1)
+    m1 = pad_me(m1)
     cipher2 = AES.new(k2.digest()[:16], AES.MODE_CBC)
     cB = cipher2.encrypt(m1.encode('utf-8'))
 
     # send cB
-    print(cB)
-    print("key 2", k2.digest())
+
+    return k1.digest, k2.digest()
 
 #Task II: tampering with A and B
 def diffie_attack1(p, g):
@@ -94,26 +95,22 @@ def diffie_attack1(p, g):
     # sA_bytes = str(sA).encode('utf-8')
     # k1 = hashlib.sha256(sA_bytes).hexdigest()[:16]
     m0 = "Hi Bob!"
-    m0 = pad(m0)
+    m0 = pad_me(m0)
     cipher = AES.new(k1.digest()[:16], AES.MODE_CBC, iv)
     cA = cipher.encrypt(m0.encode('utf-8'))
 
     # send cA
-    print(cA)
-    print("key 1", k1.digest())
     # Bob
     sB = pow(A, b, p)
     k2 = SHA256.new()
     sB_BL = sB.to_bytes((sB.bit_length() + 7) // 8, byteorder='big')
     k2.update(sB_BL)
     m1 = "Hi Alice"
-    m1 = pad(m1)
+    m1 = pad_me(m1)
     cipher2 = AES.new(k2.digest()[:16], AES.MODE_CBC, iv)
     cB = cipher2.encrypt(m1.encode('utf-8'))
 
     # send cB
-    print(cB)
-    print("key 2", k2.digest())
     
     # Mallory decrypts message
     new_secret = 0 # p mod p = 0
@@ -165,26 +162,22 @@ def diffie_attack2(p, g):
     # sA_bytes = str(sA).encode('utf-8')
     # k1 = hashlib.sha256(sA_bytes).hexdigest()[:16]
     m0 = "Hi Bob!"
-    m0 = pad(m0)
+    m0 = pad_me(m0)
     cipher = AES.new(k1.digest()[:16], AES.MODE_CBC, iv)
     cA = cipher.encrypt(m0.encode('utf-8'))
 
     # send cA
-    print(cA)
-    print("key 1", k1.digest())
     # Bob
     sB = pow(A, b, p)
     k2 = SHA256.new()
     sB_BL = sB.to_bytes((sB.bit_length() + 7) // 8, byteorder='big')
     k2.update(sB_BL)
     m1 = "Hi Alice"
-    m1 = pad(m1)
+    m1 = pad_me(m1)
     cipher2 = AES.new(k2.digest()[:16], AES.MODE_CBC, iv)
     cB = cipher2.encrypt(m1.encode('utf-8'))
 
     # send cB
-    print(cB)
-    print("key 2", k2.digest())
     
     # Mallory decrypts message
     # changing g to 1
@@ -210,6 +203,7 @@ def diffie_attack2(p, g):
     print(alice_message)
     print(bob_message)
     
+#TASK III
 def rsa_encrypt(message):
     m = int(message.encode('utf-8').hex(), 16)
     p = getPrime(2048)
@@ -255,8 +249,7 @@ def mod_inverse(e, phi):
 
 def rsa_decrypt(phi, c, n):
     e = 65537
-    gcd = mod_inverse(e, phi)
-    d = gcd
+    d = mod_inverse(e, phi)
     #d = pow(e, -1, phi)
 
     m = pow(int(c), int(d), int(n))
@@ -264,19 +257,31 @@ def rsa_decrypt(phi, c, n):
     message = bytes.fromhex(hex_s).decode('utf-8')
     return message
 
-# def rsa_attack(s, n, e, phi):
-#     # uses e, n from alice and s from bob
-#     c = pow(s, e, n)
-#     # mallory modifies c
-#     c_prime = (5 * c) % n
-#     # alice decrypts the modified c
-#     s = rsa_decrypt(phi, c_prime, n)
-#     key = SHA256.new(long_to_bytes(s)).digest()
+def rsa_attack(s, n, e, phi):
+    # uses e, n from alice and s from bob
+    c = pow(s, e, n)
+    # mallory modifies c
+    c_prime = n * c
+    # alice decrypts the modified c
+    d = mod_inverse(e, phi)
+    s = pow(int(c_prime), int(d), int(n))
 
-#     m = "Hi Bob!"
-#     cipher = AES.new(key, AES.MODE_CBC)
-#     c_zero = cipher.encrypt(m.encode('utf-8'))
-#     return c_zero
+    # mallory encrypts her message with s
+    key = SHA256.new(long_to_bytes(s)).digest()
+    m = "Hi Bob!"
+    cipher = AES.new(key, AES.MODE_CBC)
+    padded_message = pad(m.encode('utf-8'), AES.block_size)
+    c_zero = cipher.encrypt(padded_message)
+
+    # mallory 
+    s_mallory = 0
+    key_mallory = SHA256.new(long_to_bytes(s_mallory)).digest()
+    cipher_mallory = AES.new(key_mallory, AES.MODE_CBC, cipher.iv)
+    attack_mallory = cipher_mallory.decrypt(c_zero)
+    attack_mallory = unpad(attack_mallory, AES.block_size).decode('utf-8')
+    return attack_mallory
+
+
 
 def main():
     p = "B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C6"
@@ -292,20 +297,32 @@ def main():
     "D662A4D18E73AFA32D779D5918D08BC8858F4DCEF97C2A24"
     "855E6EEB22B3B2E5"
 
+    k1, k2 = diffie(p, g)
+    if k1 == k2:
+        print("Diffie successful. Alice and Bobs' keys match.")
+
     diffie_attack1(p, g)
     diffie_attack2(p, g)
     c, n, phi = rsa_encrypt("hello")
     m = rsa_decrypt(phi, c, n)
+    if m == "hello":
+        print("RSA encrypt and decrypt successful. Messages match.")
 
     c, n, phi = rsa_encrypt("hi my name is keila")
     m = rsa_decrypt(phi, c, n)
+    if m == "hi my name is keila":
+        print("RSA encrypt and decrypt successful. Messages match.")
 
 
     p = getPrime(2048)
     q = getPrime(2048)
+    p = 5
+    q = 11
     n = p*q
     phi = (p-1)*(q-1)
-    # c_zero = rsa_attack(5, n, 3, phi)
+    c_zero = rsa_attack(7, n, 3, phi)
+    if c_zero == "Hi Bob!":
+        print("RSA Attack successful. Mallory decrypted Alice's message.")
 
 if __name__ == "__main__":
     main()
