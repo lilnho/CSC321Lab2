@@ -92,8 +92,7 @@ def diffie_attack1(p, g):
     k1 = SHA256.new()
     sA_BL = sA.to_bytes((sA.bit_length() + 7) // 8, byteorder='big')
     k1.update(sA_BL)
-    # sA_bytes = str(sA).encode('utf-8')
-    # k1 = hashlib.sha256(sA_bytes).hexdigest()[:16]
+
     m0 = "Hi Bob!"
     m0 = pad_me(m0)
     cipher = AES.new(k1.digest()[:16], AES.MODE_CBC, iv)
@@ -159,8 +158,6 @@ def diffie_attack2(p, g):
     k1 = SHA256.new()
     sA_BL = sA.to_bytes((sA.bit_length() + 7) // 8, byteorder='big')
     k1.update(sA_BL)
-    # sA_bytes = str(sA).encode('utf-8')
-    # k1 = hashlib.sha256(sA_bytes).hexdigest()[:16]
     m0 = "Hi Bob!"
     m0 = pad_me(m0)
     cipher = AES.new(k1.digest()[:16], AES.MODE_CBC, iv)
@@ -181,12 +178,12 @@ def diffie_attack2(p, g):
     
     # Mallory decrypts message
     # changing g to 1
-    new_secret = 1 # g ^ anything = 1 
+    new_secret = 1 # 1 ^ anything mod [any positive int that isnt 1] = 1 
     # changing g to p
     #new_secret = 0 # p mod p = 0
     #changing g = p - 1
-    #new_secret = 1 # if p is even, (p-1) mod p is 1
-    #new_secret = p - 1 # if p is odd, (p-1) mod p = p - 1
+    #new_secret = 1 # if a/b is even, (p-1)^[even] mod p is 1
+    #new_secret = p - 1 # if a/b is odd, (p-1)^[odd] mod p = p - 1
     
 
     mallory_key = SHA256.new()
