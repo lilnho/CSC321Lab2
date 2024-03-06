@@ -278,7 +278,18 @@ def rsa_attack(s, n, e, phi):
     attack_mallory = unpad(attack_mallory, AES.block_size).decode('utf-8')
     return attack_mallory
 
-
+#Task IV
+def sha256_encrypt(message):
+    m = message.encode('utf-8')
+    k1 = SHA256.new()
+    k1.update(m)
+    result = k1.digest()
+    return result
+    # jello = "jello"
+    # m1 = jello.encode('utf-8')
+    # k1.update(m1)
+    # result = k1.digest()
+    # return result
 
 def main():
     p = "B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C6"
@@ -320,6 +331,9 @@ def main():
     c_zero = rsa_attack(7, n, 3, phi)
     if c_zero == "Hi Bob!":
         print("RSA Attack successful. Mallory decrypted Alice's message.")
+
+    t4 = sha256_encrypt("hello")
+    print(t4.hex())
 
 if __name__ == "__main__":
     main()
