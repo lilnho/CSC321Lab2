@@ -1,5 +1,6 @@
 import Crypto
 import random
+import string
 from Crypto.Hash import SHA256
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
@@ -284,56 +285,82 @@ def sha256_encrypt(message):
     k1 = SHA256.new()
     k1.update(m)
     result = k1.digest()
-    return result
-    # jello = "jello"
-    # m1 = jello.encode('utf-8')
-    # k1.update(m1)
-    # result = k1.digest()
-    # return result
+    return result.hex()
+
+def sha256_collision(limit):
+    test = ''.join(random.choices(string.ascii_letters, k=5))
+    btest = bytearray(test, 'utf-8')
+    bittest = btest[0:limit]
+    outputs = {}
+    count = 0
+    loop = False
+    while loop == False:
+        output = sha256_encrypt(test)
+        if bittest in outputs:
+            loop = True
+        else:
+            outputs[count] = bittest
+            count +=1
+            test = ''.join(random.choices(string.ascii_letters, k=5))
+    if loop == true:
+        return count
+    
+        
+            
+    
+    
+    
+    
+
+
 
 def main():
-    p = "B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C6"
-    "9A6A9DCA52D23B616073E28675A23D189838EF1E2EE652C0"
-    "13ECB4AEA906112324975C3CD49B83BFACCBDD7D90C4BD70"
-    "98488E9C219A73724EFFD6FAE5644738FAA31A4FF55BCCC0"
-    "A151AF5F0DC8B4BD45BF37DF365C1A65E68CFDA76D4DA708"
-    "DF1FB2BC2E4A4371"
-    g = "A4D1CBD5C3FD34126765A442EFB99905F8104DD258AC507F"
-    "D6406CFF14266D31266FEA1E5C41564B777E690F5504F213"
-    "160217B4B01B886A5E91547F9E2749F4D7FBD7D3B9A92EE1"
-    "909D0D2263F80A76A6A24C087A091F531DBF0A0169B6A28A"
-    "D662A4D18E73AFA32D779D5918D08BC8858F4DCEF97C2A24"
-    "855E6EEB22B3B2E5"
+    # p = "B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C6"
+    # "9A6A9DCA52D23B616073E28675A23D189838EF1E2EE652C0"
+    # "13ECB4AEA906112324975C3CD49B83BFACCBDD7D90C4BD70"
+    # "98488E9C219A73724EFFD6FAE5644738FAA31A4FF55BCCC0"
+    # "A151AF5F0DC8B4BD45BF37DF365C1A65E68CFDA76D4DA708"
+    # "DF1FB2BC2E4A4371"
+    # g = "A4D1CBD5C3FD34126765A442EFB99905F8104DD258AC507F"
+    # "D6406CFF14266D31266FEA1E5C41564B777E690F5504F213"
+    # "160217B4B01B886A5E91547F9E2749F4D7FBD7D3B9A92EE1"
+    # "909D0D2263F80A76A6A24C087A091F531DBF0A0169B6A28A"
+    # "D662A4D18E73AFA32D779D5918D08BC8858F4DCEF97C2A24"
+    # "855E6EEB22B3B2E5"
 
-    k1, k2 = diffie(p, g)
-    if k1 == k2:
-        print("Diffie successful. Alice and Bobs' keys match.")
+    # k1, k2 = diffie(p, g)
+    # if k1 == k2:
+    #     print("Diffie successful. Alice and Bobs' keys match.")
 
-    diffie_attack1(p, g)
-    diffie_attack2(p, g)
-    c, n, phi = rsa_encrypt("hello")
-    m = rsa_decrypt(phi, c, n)
-    if m == "hello":
-        print("RSA encrypt and decrypt successful. Messages match.")
+    # diffie_attack1(p, g)
+    # diffie_attack2(p, g)
+    # c, n, phi = rsa_encrypt("hello")
+    # m = rsa_decrypt(phi, c, n)
+    # if m == "hello":
+    #     print("RSA encrypt and decrypt successful. Messages match.")
 
-    c, n, phi = rsa_encrypt("hi my name is keila")
-    m = rsa_decrypt(phi, c, n)
-    if m == "hi my name is keila":
-        print("RSA encrypt and decrypt successful. Messages match.")
+    # c, n, phi = rsa_encrypt("hi my name is keila")
+    # m = rsa_decrypt(phi, c, n)
+    # if m == "hi my name is keila":
+    #     print("RSA encrypt and decrypt successful. Messages match.")
 
 
-    p = getPrime(2048)
-    q = getPrime(2048)
-    p = 5
-    q = 11
-    n = p*q
-    phi = (p-1)*(q-1)
-    c_zero = rsa_attack(7, n, 3, phi)
-    if c_zero == "Hi Bob!":
-        print("RSA Attack successful. Mallory decrypted Alice's message.")
+    # p = getPrime(2048)
+    # q = getPrime(2048)
+    # p = 5
+    # q = 11
+    # n = p*q
+    # phi = (p-1)*(q-1)
+    # c_zero = rsa_attack(7, n, 3, phi)
+    # if c_zero == "Hi Bob!":
+    #     print("RSA Attack successful. Mallory decrypted Alice's message.")
 
     t4 = sha256_encrypt("hello")
-    print(t4.hex())
+    print(t4)
+    t5 = sha256_encrypt("jello")
+    print(t5)
+
+    sha256_collision(8)
 
 if __name__ == "__main__":
     main()
