@@ -9,6 +9,11 @@ from Crypto.Util.Padding import pad
 from Crypto.Util.number import getPrime
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 
+from datetime import datetime
+import time
+
+import matplotlib.pyplot as plt
+
 #TASK I
 def pad_me(s):
     return s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) % AES.block_size)
@@ -289,21 +294,52 @@ def sha256_encrypt(message):
 
 def sha256_collision(limit):
     test = ''.join(random.choices(string.ascii_letters, k=5))
-    btest = bytearray(test, 'utf-8')
-    bittest = btest[0:limit]
-    outputs = {}
+    outputs = []
     count = 0
     loop = False
     while loop == False:
         output = sha256_encrypt(test)
-        if bittest in outputs:
+        byte = bytearray(output, 'utf-8')
+        bit = byte[0:limit] 
+        if bit in outputs:
             loop = True
         else:
-            outputs[count] = bittest
+            outputs.append(bit)
             count +=1
             test = ''.join(random.choices(string.ascii_letters, k=5))
-    if loop == true:
+    if loop == True:
         return count
+    
+def timecheck():
+    count = []
+    times = []
+    bits = []
+    for x in range(8,52,2):
+        bits.append(x)
+        start = time.time()
+
+        ct = sha256_collision(x)
+
+        timeFound = time.time()
+        difftime = timeFound - start
+
+        times.append(difftime)
+        count.append(ct)
+
+    plt.plot(bits, times)
+    plt.xlabel('digest size')
+    plt.ylabel('collision time')
+    plt.title('Digest Size vs Collision Time')
+    plt.show()
+
+    plt.plot(bits, count)
+    plt.xlabel('digest size')
+    plt.ylabel('number of collisions')
+    plt.title('Digest Size vs Number of Collisions')
+    plt.show()
+        
+        
+
     
         
             
@@ -360,7 +396,7 @@ def main():
     t5 = sha256_encrypt("jello")
     print(t5)
 
-    sha256_collision(8)
+    timecheck()
 
 if __name__ == "__main__":
     main()
