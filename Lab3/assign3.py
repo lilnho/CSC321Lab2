@@ -293,22 +293,26 @@ def sha256_encrypt(message):
     return result.hex()
 
 def sha256_collision(limit):
-    test = ''.join(random.choices(string.ascii_letters, k=5))
-    outputs = []
-    count = 0
+    testword = ''.join(random.choices(string.ascii_letters, k=12))
+    outputs = {}
     loop = False
+    mask = 2**limit - 1
     while loop == False:
-        output = sha256_encrypt(test)
+        output = sha256_encrypt(testword) 
         byte = bytearray(output, 'utf-8')
-        bit = byte[0:limit] 
-        if bit in outputs:
+        digest = byte[0:64] 
+        digest = int.from_bytes(digest) & mask 
+        if digest in outputs and not testword in outputs.keys():
+            print(digest)
+            print(outputs[digest])
+            print(testword)
+            print()
             loop = True
         else:
-            outputs.append(bit)
-            count +=1
-            test = ''.join(random.choices(string.ascii_letters, k=5))
+            outputs[digest] = testword
+            testword = ''.join(random.choices(string.ascii_letters, k=12))
     if loop == True:
-        return count
+        return len(outputs)
     
 def timecheck():
     count = []
@@ -322,6 +326,11 @@ def timecheck():
 
         timeFound = time.time()
         difftime = timeFound - start
+
+        print(x)
+        print(difftime)
+        print(ct)
+        print()
 
         times.append(difftime)
         count.append(ct)
